@@ -1,9 +1,11 @@
 from __future__ import print_function
 import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
+from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score, roc_curve, auc
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 
@@ -35,8 +37,8 @@ y = np.load(f"data/labels_{FLAGS.data}x{FLAGS.data}.npy")
 path = os.path.join("outputs", FLAGS.model)
 directories = [
     ['checkpoints'],
-    ['validation set'],
-    ['figures', 'Precision and recall'],
+    ['predictions'],
+    ['figures', 'snapshots'],
 ]
 
 for paths in directories:
@@ -53,8 +55,11 @@ for paths in directories:
 #Shuffling and splitting data into train, validation, test sets
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, shuffle=True, random_state=33)
 x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=0.5, shuffle=True, random_state=33)
-np.save(os.path.join(path, "validation set", "x_val"), x_val)
-np.save(os.path.join(path, "validation set", "y_val"), y_val)
+np.save(os.path.join(path, "predictions", "x_val"), x_val)
+np.save(os.path.join(path, "predictions", "y_val"), y_val)
+print(x_val[0])
+plt.imshow(x_val[0])
+plt.show()
 
 #@title Resnet reference: https://keras.io/examples/cifar10_resnet/
 
@@ -420,11 +425,9 @@ class PlotLosses(keras.callbacks.Callback):
         self.accuracies = []
         self.val_accuracies = []
         self.losses = []
-        self.val_losses = []        
+        self.val_losses = []
+        self.val_aucs = []
         self.logs = []
-        self.val_f1s = []
-        self.val_recalls = []
-        self.val_precisions = []
 
     def on_epoch_end(self, epoch, logs={}):
         self.logs.append(logs)
@@ -434,22 +437,28 @@ class PlotLosses(keras.callbacks.Callback):
         self.losses.append(logs.get('loss'))
         self.val_losses.append(logs.get('val_loss'))
 
-        val_predict = np.asarray(self.model.predict(x_val)) >= 0.99
-        val_targ = y_val
-        _val_f1 = f1_score(val_targ, val_predict, average='micro')
-        _val_recall = recall_score(val_targ, val_predict, average='micro')
-        _val_precision = precision_score(val_targ, val_predict, average='micro')
-        self.val_f1s.append(_val_f1)
-        self.val_recalls.append(_val_recall)
-        self.val_precisions.append(_val_precision)
-        print(f"True positives: {(val_predict * val_targ).sum()}")
-        print(f"Predicted positives: {val_predict.sum()}")
-        print(f"Actual positives: {val_targ.sum()}")
-        print(f"f1: {_val_f1} precision: {_val_precision} recall {_val_recall}")
+        # Calculate AUC
+        y_pred = model.predict(x_val)
+        np.save(os.path.join(path, "predictions", "y_pred"), y_pred[:, 1])
+        y_compare = np.zeros((y_val.shape[0], 2))
+        y_compare[:, 0] = y_pred[:, 1]
+        y_compare[:, 1] = y_val[:, 1]
+        y_compare_df = pd.DataFrame(data=y_compare, columns=["Predicted Probabilities", "Ground Truth"])
+        y_compare_df.to_csv(os.path.join(path, "predictions", f"comparisons_{epoch}.csv"), index=None, header=True)
         
-        fig = plt.figure(figsize=(20, 10))
+        fpr, tpr, thresholds = roc_curve(y_val[:, 1], y_pred[:, 1])
+        auc_value = auc(fpr, tpr)
+        self.val_aucs.append(auc_value)
+
+        # Plot figures
+        fig = plt.figure(figsize=(20, 20))
         fig.patch.set_facecolor('white')
-        plt.title(f"Epoch: {epoch}")
+        plt.suptitle(f'Accuracies, Losses, ROC and AUC epoch({epoch})')
+
+        # Accuracies and losses
+        gs = gridspec.GridSpec(2, 2)
+        plt.subplot(gs[0, :])
+        plt.title(f"Accuracies, losses and AUC")
         plt.plot(self.x, self.losses,
                  label=f"loss {logs.get('loss'): .4}")
         plt.plot(self.x, self.val_losses,
@@ -458,15 +467,40 @@ class PlotLosses(keras.callbacks.Callback):
                  label=f"acc {logs.get('acc'): .4}")
         plt.plot(self.x, self.val_accuracies,
                  label=f"val_acc {logs.get('val_acc'): .4}")
+        plt.plot(self.x, self.val_aucs,
+                 label=f"val_auc {auc_value: .4}")
         
-        y_m, y_M = min(self.val_losses), max(self.val_accuracies)
-        x_m, x_M = self.val_losses.index(y_m), self.val_accuracies.index(y_M)
-        plt.plot(x_m, y_m ,'o')
-        plt.annotate(f"Min val_loss: {y_m: .4}", xy=(x_m, y_m))
-        plt.plot(x_M, y_M ,'o')
-        plt.annotate(f"Max val_acc: {y_M: .4}", xy=(x_M, y_M))
+        y_loss_m, y_acc_M, y_auc_M = min(self.val_losses), max(self.val_accuracies), max(self.val_aucs)
+        x_loss_m, x_acc_M, x_auc_M = self.val_losses.index(y_loss_m), self.val_accuracies.index(y_acc_M), self.val_aucs.index(y_auc_M)
+
+        plt.plot(x_loss_m, y_loss_m ,'o')
+        plt.annotate(f"Min val_loss: {y_loss_m: .4}", xy=(x_loss_m, y_loss_m))
+        plt.plot(x_acc_M, y_acc_M ,'o')
+        plt.annotate(f"Max val_acc: {y_acc_M: .4}", xy=(x_acc_M, y_acc_M))
+        plt.plot(x_auc_M, y_auc_M ,'o')
+        plt.annotate(f"Max val_auc: {y_auc_M: .4}", xy=(x_auc_M, y_auc_M))
         plt.legend()
-        fig.savefig(os.path.join(path, "figures", "Accuracies_and_losses"))
+        
+        # ROC Curve
+        plt.subplot(gs[1, 0])
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.plot(fpr, tpr, label='Area = {:.3f}'.format(auc_value))
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
+        plt.title('ROC curve')
+        plt.legend(loc='best')
+
+        plt.subplot(gs[1, 1])
+        plt.xlim(0, 0.3)
+        plt.ylim(0.7, 1)
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.plot(fpr, tpr, label='Area = {:.3f}'.format(auc_value))
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
+        plt.title('ROC curve (zoomed in at top left)')
+        plt.legend(loc='best')
+        fig.savefig(os.path.join(path, "figures", "snapshots", f"figures{epoch}"))
+        fig.savefig(os.path.join(path, "figures", "figures"))
         
 plot_losses = PlotLosses()
 
