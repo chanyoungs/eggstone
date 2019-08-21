@@ -3,23 +3,58 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_score
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '4'
+# Session config to remove the CUDNN error
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
 config.log_device_placement = True  # to log device placement (on which device the operation ran)
 sess = tf.Session(config=config)
 set_session(sess)  # set this TensorFlow session as the default session for Keras
 
+# Flags
+flags = tf.app.flags
+FLAGS = tf.app.flags.FLAGS
+
+flags.DEFINE_string("model", "test", "m") # Used to create directories and filenames
+flags.DEFINE_string("data", "64", "d") # 54, 256
+flags.DEFINE_integer("n", 3, "n") # 3~
+flags.DEFINE_integer("version", 1, "v") # 1,2,3
+flags.DEFINE_integer("batch_size", 32, "b")
+flags.DEFINE_integer("epochs", 200, "e")
+flags.DEFINE_boolean("data_augmentation", True, "da")
+flags.DEFINE_boolean("subtract_pixel_mean", True, "spm")
+
 # Load data
-x = np.load("data/images_256x256.npy")
-y = np.load("data/labels_256x256.npy")
+x = np.load(f"data/images_{FLAGS.data}x{FLAGS.data}.npy")
+y = np.load(f"data/labels_{FLAGS.data}x{FLAGS.data}.npy")
+
+# Make directories
+path = os.path.join("outputs", FLAGS.model)
+directories = [
+    ['checkpoints'],
+    ['validation set'],
+    ['figures', 'Precision and recall'],
+]
+
+for paths in directories:
+    full_dir = path
+    for folder in paths:
+        full_dir = os.path.join(full_dir, folder)
+
+    if not os.path.isdir(full_dir):
+        print(f'{full_dir} does not exist. Creating path...')
+        os.makedirs(full_dir)
+    else:
+        print(f'{full_dir} already exists')
 
 #Shuffling and splitting data into train, validation, test sets
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, shuffle=True, random_state=33)
 x_val, x_test, y_val, y_test = train_test_split(x_test, y_test, test_size=0.5, shuffle=True, random_state=33)
+np.save(os.path.join(path, "validation set", "x_val"), x_val)
+np.save(os.path.join(path, "validation set", "y_val"), y_val)
 
 #@title Resnet reference: https://keras.io/examples/cifar10_resnet/
 
@@ -34,14 +69,15 @@ from keras.regularizers import l2
 from keras import backend as K
 from keras.models import Model
 
+
 # Training parameters
-batch_size = 32  # orig paper trained all networks with batch_size=128
-epochs = 200
-data_augmentation = True
+batch_size = FLAGS.batch_size  # orig paper trained all networks with batch_size=128
+epochs = FLAGS.epochs
+data_augmentation = FLAGS.data_augmentation
 num_classes = 2
 
 # Subtracting pixel mean improves accuracy
-subtract_pixel_mean = True
+subtract_pixel_mean = FLAGS.subtract_pixel_mean
 
 # Model parameter
 # ----------------------------------------------------------------------------
@@ -57,11 +93,11 @@ subtract_pixel_mean = True
 # ResNet164 |27(18)| -----     | 94.07     | -----     | 94.54     | ---(---)
 # ResNet1001| (111)| -----     | 92.39     | -----     | 95.08+-.14| ---(---)
 # ---------------------------------------------------------------------------
-n = 3
+n = FLAGS.n
 
 # Model version
 # Orig paper: version = 1 (ResNet v1), Improved ResNet: version = 2 (ResNet v2)
-version = 1
+version = FLAGS.version
 
 
 # Computed depth from supplied model parameter n
@@ -352,12 +388,12 @@ model.summary()
 print(model_type)
 
 # Prepare model model saving directory.
-save_dir = os.path.join(os.getcwd(), 'saved_models')
-model_name = 'defect_hunter_%s_model.{epoch:03d}.h5' % model_type
+save_dir = os.path.join(path, 'checkpoints')
+
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
-filepath_acc = os.path.join(save_dir, "defect_hunter_best_acc.h5")
-filepath_loss = os.path.join(save_dir, "defect_hunter_best_loss.h5")
+filepath_acc = os.path.join(save_dir, "best_acc.h5")
+filepath_loss = os.path.join(save_dir, "best_loss.h5")
 
 # Prepare callbacks for model saving and for learning rate adjustment.
 checkpoint_acc = ModelCheckpoint(filepath=filepath_acc,
@@ -386,15 +422,30 @@ class PlotLosses(keras.callbacks.Callback):
         self.losses = []
         self.val_losses = []        
         self.logs = []
+        self.val_f1s = []
+        self.val_recalls = []
+        self.val_precisions = []
 
     def on_epoch_end(self, epoch, logs={}):
-
         self.logs.append(logs)
         self.x.append(epoch)
         self.accuracies.append(logs.get('acc'))
         self.val_accuracies.append(logs.get('val_acc'))
         self.losses.append(logs.get('loss'))
         self.val_losses.append(logs.get('val_loss'))
+
+        val_predict = np.asarray(self.model.predict(x_val)) >= 0.99
+        val_targ = y_val
+        _val_f1 = f1_score(val_targ, val_predict, average='micro')
+        _val_recall = recall_score(val_targ, val_predict, average='micro')
+        _val_precision = precision_score(val_targ, val_predict, average='micro')
+        self.val_f1s.append(_val_f1)
+        self.val_recalls.append(_val_recall)
+        self.val_precisions.append(_val_precision)
+        print(f"True positives: {(val_predict * val_targ).sum()}")
+        print(f"Predicted positives: {val_predict.sum()}")
+        print(f"Actual positives: {val_targ.sum()}")
+        print(f"f1: {_val_f1} precision: {_val_precision} recall {_val_recall}")
         
         fig = plt.figure(figsize=(20, 10))
         fig.patch.set_facecolor('white')
@@ -415,7 +466,7 @@ class PlotLosses(keras.callbacks.Callback):
         plt.plot(x_M, y_M ,'o')
         plt.annotate(f"Max val_acc: {y_M: .4}", xy=(x_M, y_M))
         plt.legend()
-        fig.savefig("./Accuracies_and_losses")
+        fig.savefig(os.path.join(path, "figures", "Accuracies_and_losses"))
         
 plot_losses = PlotLosses()
 
@@ -594,7 +645,7 @@ def plot_confusion_matrix(cm,
     plt.ylabel('True label')
     plt.xlabel('Predicted label\naccuracy={:0.4f}; misclass={:0.4f}'.format(accuracy, misclass))
 
-from sklearn.metrics import confusion_matrix
+
 no_steps = 10000.
 for p in range(1, 20):
     y_pred_thresh = y_pred[:, 1] > p/no_steps
