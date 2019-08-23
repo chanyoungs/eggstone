@@ -1,10 +1,12 @@
-gfrom __future__ import print_function
+from __future__ import print_function
 import os
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 from load_data import load_data
 from model_resnet import run_resnet
-
+import logging
+logging.getLogger('tensorflow').disabled = True
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
 # Session config to remove the CUDNN error
 config = tf.ConfigProto()
@@ -12,7 +14,6 @@ config.gpu_options.allow_growth = True  # dynamically grow the memory used on th
 config.log_device_placement = True  # to log device placement (on which device the operation ran)
 sess = tf.Session(config=config)
 set_session(sess)  # set this TensorFlow session as the default session for Keras
-
 
 # Get flags
 flags = tf.app.flags
@@ -32,14 +33,14 @@ FLAGS = tf.app.flags.FLAGS
 # # ResNet164 |27(18)| -----     | 94.07     | -----     | 94.54     | ---(---)
 # # ResNet1001| (111)| -----     | 92.39     | -----     | 95.08+-.14| ---(---)
 # # ---------------------------------------------------------------------------
-flags.DEFINE_string("model", "test", "m") # Used to create directories and filenames
-flags.DEFINE_string("data", "64", "d") # 54, 256
-flags.DEFINE_integer("n", 3, "n") # 3~
-flags.DEFINE_integer("version", 1, "v") # Orig paper: version = 1 (ResNet v1), Improved ResNet: version = 2 (ResNet v2)
-flags.DEFINE_integer("batch_size", 32, "b") # orig paper trained all networks with batch_size=128
-flags.DEFINE_integer("epochs", 200, "e")
-flags.DEFINE_boolean("data_augmentation", True, "da")
-flags.DEFINE_boolean("subtract_pixel_mean", True, "spm") # Subtracting pixel mean improves accuracy
+flags.DEFINE_string("model", "test", "Used to create directories and filenames")
+flags.DEFINE_string("data", "64", "Input dimensions")
+flags.DEFINE_integer("n", 3, "Number of layers")
+flags.DEFINE_integer("version", 1, "Orig paper: version = 1 (ResNet v1), Improved ResNet: version = 2 (ResNet v2)")
+flags.DEFINE_integer("batch_size", 32, "orig paper trained all networks with batch_size=128")
+flags.DEFINE_integer("epochs", 200, "Total number of epochs")
+flags.DEFINE_boolean("data_augmentation", True, "If set true, does data augmentation")
+flags.DEFINE_boolean("subtract_pixel_mean", True, "Subtracting pixel mean improves accuracy")
 
 
 # Define paths

@@ -1,12 +1,21 @@
 import numpy as np
 import os
+import sys
 from PIL import Image
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 
-# img_w = 256
-# img_h = 256
-img_w = 400
-img_h = 400
+
+# Original Dimensions
+img_w_original = 400
+img_h_original = 400
+n_channels = 3
+n_classes = 1
+
+if len(sys.argv) > 1:
+    n = int(sys.argv[1])
+    img_w, img_h = n, n
+else:
+    img_w, img_h = img_w_original, img_h_original
 
 def images_to_nparray(folder_path, error_log_file_name):
     file_names = os.listdir(folder_path)
@@ -14,11 +23,6 @@ def images_to_nparray(folder_path, error_log_file_name):
 
     n = len(file_names)
 
-    # Original Dimensions
-    img_w_original = 400
-    img_h_original = 400
-    n_channels = 3
-    n_classes = 1
 
     # dataset = np.ndarray(shape=((n, n_channels, img_h, img_w)), dtype=np.float32)
     dataset_list = []

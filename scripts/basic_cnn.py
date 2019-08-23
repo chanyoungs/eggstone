@@ -12,8 +12,8 @@ sess = tf.Session(config=config)
 set_session(sess)  # set this TensorFlow session as the default session for Keras
 
 # Load data
-x = np.load("data/images.npy")
-y = np.load("data/labels.npy")
+x = np.load("../data/images_400x400.npy")
+y = np.load("../data/labels_400x400.npy")
 
 #Shuffling and splitting data into train, validation, test sets
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, shuffle=True, random_state=33)
@@ -30,13 +30,12 @@ MaxPooling2D = keras.layers.MaxPooling2D
 
 # from keras import backend as K
 
-batch_size = 32
+batch_size = 4
 num_classes = 2
 epochs = 200
 
 # input image dimensions
-img_rows, img_cols = 64, 64
-input_shape = (img_rows, img_cols, 3)
+input_shape = x.shape[1:]
 
 x_train = x_train.astype('float32')
 x_val = x_val.astype('float32')
@@ -62,12 +61,14 @@ x_test = np.array(x_test)
 y_test = np.array(y_test)
 
 model = Sequential()
-model.add(
-  Conv2D(64, kernel_size=(3, 3),
-  activation='relu',
-  input_shape=input_shape)
-  )
-model.add(Conv2D(32, (3, 3), activation='relu'))
+model.add(Conv2D(256, kernel_size=(3, 3), activation='relu', input_shape=input_shape, dilation_rate=16))
+model.add(Conv2D(128, (3, 3), activation='relu', dilation_rate=8))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Conv2D(64, (3, 3), activation='relu', dilation_rate=4))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Conv2D(32, (3, 3), activation='relu', dilation_rate=2))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 model.add(Conv2D(16, (3, 3), activation='relu'))

@@ -92,8 +92,8 @@ def run_resnet(batch_size,
                                    min_lr=0.5e-6,
                                    verbose=0)
 
-    from plots_callback import Plots_callback
-    plots_callback = Plots_callback(path, x_val, y_val)
+    from plots_callback import PlotsCallback
+    plots_callback = PlotsCallback(path, x_val, y_val)
 
     callbacks = [checkpoint_acc, checkpoint_loss, lr_reducer, lr_scheduler, plots_callback]
 

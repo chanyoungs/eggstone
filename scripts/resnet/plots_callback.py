@@ -6,7 +6,7 @@ import os
 import keras
 from sklearn.metrics import roc_curve, auc
 
-class Plots_callback(keras.callbacks.Callback):
+class PlotsCallback(keras.callbacks.Callback):
     def __init__(self, path, x_val, y_val):
         self.path = path
         self.x_val = x_val
@@ -23,6 +23,7 @@ class Plots_callback(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         self.logs.append(logs)
+        epoch += 1
         self.x.append(epoch)
         self.accuracies.append(logs.get('acc'))
         self.val_accuracies.append(logs.get('val_acc'))
