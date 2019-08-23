@@ -12,8 +12,9 @@ sess = tf.Session(config=config)
 set_session(sess)  # set this TensorFlow session as the default session for Keras
 
 # Load data
-x = np.load("../data/images_400x400.npy")
-y = np.load("../data/labels_400x400.npy")
+root = "../../"
+x = np.load(os.path.join(root, "data", "images_400x400.npy"))
+y = np.load(os.path.join(root, "data", "labels_400x400.npy"))
 
 #Shuffling and splitting data into train, validation, test sets
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, shuffle=True, random_state=33)

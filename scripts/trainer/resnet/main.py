@@ -44,7 +44,7 @@ flags.DEFINE_boolean("subtract_pixel_mean", True, "Subtracting pixel mean improv
 
 
 # Define paths
-root = "../../"
+root = "../../../"
 path = os.path.join(root, "outputs", FLAGS.model)
 
 

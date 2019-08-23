@@ -45,6 +45,7 @@ def run_resnet(batch_size,
     # If subtract pixel mean is enabled
     if subtract_pixel_mean:
         x_train_mean = np.mean(x_train, axis=0)
+        np.save(os.path.join(path, "checkpoints", "pixel_mean"), x_train_mean)
         x_train -= x_train_mean
         x_val -= x_train_mean
         x_test -= x_train_mean

@@ -23,7 +23,6 @@ class PlotsCallback(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         self.logs.append(logs)
-        epoch += 1
         self.x.append(epoch)
         self.accuracies.append(logs.get('acc'))
         self.val_accuracies.append(logs.get('val_acc'))
@@ -67,11 +66,11 @@ class PlotsCallback(keras.callbacks.Callback):
         x_loss_m, x_acc_M, x_auc_M = self.val_losses.index(y_loss_m), self.val_accuracies.index(y_acc_M), self.val_aucs.index(y_auc_M)
 
         plt.plot(x_loss_m, y_loss_m ,'o')
-        plt.annotate(f"Min val_loss: {y_loss_m: .4}", xy=(x_loss_m, y_loss_m))
+        plt.annotate(f"Min val_loss: {y_loss_m: .4} ep: {x_loss_m}", xy=(x_loss_m, y_loss_m))
         plt.plot(x_acc_M, y_acc_M ,'o')
-        plt.annotate(f"Max val_acc: {y_acc_M: .4}", xy=(x_acc_M, y_acc_M))
+        plt.annotate(f"Max val_acc: {y_acc_M: .4} ep: {x_acc_M}", xy=(x_acc_M, y_acc_M))
         plt.plot(x_auc_M, y_auc_M ,'o')
-        plt.annotate(f"Max val_auc: {y_auc_M: .4}", xy=(x_auc_M, y_auc_M))
+        plt.annotate(f"Max val_auc: {y_auc_M: .4} ep: {x_auc_M}", xy=(x_auc_M, y_auc_M))
         plt.legend()
         
         # ROC Curve
