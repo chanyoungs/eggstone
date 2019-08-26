@@ -1,0 +1,1 @@
+python main.py --model test --data 340 --batch_size 16
