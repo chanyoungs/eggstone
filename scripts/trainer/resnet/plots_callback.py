@@ -93,3 +93,4 @@ class PlotsCallback(keras.callbacks.Callback):
         plt.legend(loc='best')
         fig.savefig(os.path.join(self.path, "figures", "snapshots", f"figures{epoch}"))
         fig.savefig(os.path.join(self.path, "figures", "figures"))
+        plt.close()
