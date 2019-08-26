@@ -12,6 +12,7 @@ from skimage.transform import resize
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 import matplotlib.pyplot as plt
+from kito import reduce_keras_model
 
 # Session config to remove the CUDNN error
 config = tf.ConfigProto()
@@ -24,8 +25,12 @@ class Predict():
     
     def __init__(self, model_name, model_type):
         # Load model - DONE
-        # self.model = load_model(os.path.join("models", model_name, f"best_{model_type}_optimised.h5"))
-        self.model = load_model(os.path.join("models", model_name, f"best_{model_type}.h5"))
+        if not os.path.isdir(os.path.join("models", model_name, "optimised")):
+            print(f'{full_dir} does not exist. Creating path...')
+        os.makedirs(full_dir)
+
+        model = load_model(os.path.join("models", model_name, f"best_{model_type}.h5"))
+        self.model = reduce_keras_model(model)
                            
         # Load x_train_mean - Done
         self.pixel_mean = np.load(os.path.join("models", model_name, "pixel_mean.npy"))

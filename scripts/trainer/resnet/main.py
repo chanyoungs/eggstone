@@ -2,6 +2,8 @@ from __future__ import print_function
 import os
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
+from keras.models import load_model
+from kito import reduce_keras_model
 from load_data import load_data
 from model_resnet import run_resnet
 import logging
@@ -35,6 +37,7 @@ FLAGS = tf.app.flags.FLAGS
 # # ---------------------------------------------------------------------------
 flags.DEFINE_string("model", "test", "Used to create directories and filenames")
 flags.DEFINE_string("data", "64", "Input dimensions")
+flags.DEFINE_boolean("optimise", False, "Set true to only optimise the existing model without training")
 flags.DEFINE_integer("n", 3, "Number of layers")
 flags.DEFINE_integer("version", 1, "Orig paper: version = 1 (ResNet v1), Improved ResNet: version = 2 (ResNet v2)")
 flags.DEFINE_integer("batch_size", 32, "orig paper trained all networks with batch_size=128")
@@ -42,42 +45,47 @@ flags.DEFINE_integer("epochs", 200, "Total number of epochs")
 flags.DEFINE_boolean("data_augmentation", True, "If set true, does data augmentation")
 flags.DEFINE_boolean("subtract_pixel_mean", True, "Subtracting pixel mean improves accuracy")
 
-
 # Define paths
 root = "../../../"
 path = os.path.join(root, "outputs", FLAGS.model)
 
+if not FLAGS.optimise:
+    # Make directories
+    directories = [
+        ['checkpoints'],
+        ['predictions'],
+        ['figures', 'snapshots'],
+    ]
 
-# Make directories
-directories = [
-    ['checkpoints'],
-    ['predictions'],
-    ['figures', 'snapshots'],
-]
+    for paths in directories:
+        full_dir = path
+        for folder in paths:
+            full_dir = os.path.join(full_dir, folder)
 
-for paths in directories:
-    full_dir = path
-    for folder in paths:
-        full_dir = os.path.join(full_dir, folder)
-
-    if not os.path.isdir(full_dir):
-        print(f'{full_dir} does not exist. Creating path...')
-        os.makedirs(full_dir)
-    else:
-        print(f'{full_dir} already exists')
-
-
-# Load data
-data = load_data(root, path, FLAGS.data)
+        if not os.path.isdir(full_dir):
+            print(f'{full_dir} does not exist. Creating path...')
+            os.makedirs(full_dir)
+        else:
+            print(f'{full_dir} already exists')
 
 
-# Train model
-run_resnet(FLAGS.batch_size,
-           FLAGS.epochs,
-           FLAGS.data_augmentation,
-           FLAGS.subtract_pixel_mean,
-           FLAGS.n,
-           FLAGS.version,
-           path,
-           data)
+    # Load data
+    data = load_data(root, path, FLAGS.data)
 
+
+    # Train model
+    run_resnet(FLAGS.batch_size,
+               FLAGS.epochs,
+               FLAGS.data_augmentation,
+               FLAGS.subtract_pixel_mean,
+               FLAGS.n,
+               FLAGS.version,
+               path,
+               data)
+
+# Optimise model
+for m in ["loss", "acc"]:
+    model = load_model(os.path.join(path, "checkpoints", f"best_{m}.h5"))
+    model.save(os.path.join(path, "checkpoints", f"best_{m}_optimised.h5"))
+print("Complete!")
+    
