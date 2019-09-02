@@ -31,12 +31,15 @@ window=Tk()
 window.title("HSV mask lower and upper boundary values")
 # window.geometry('350x200')
 
+current_row = 1
 # Instruction
-Label(window, text="Move the sliders to adjust the HSV mask lower and upper boundary values", font=("Arial Bold", 20), wraplength=600).grid(row=0, columnspan=3)
+Label(window, text="Move the sliders to adjust the HSV mask lower and upper boundary values", font=("Arial Bold", 20), wraplength=600).grid(row=current_row, columnspan=3)
+current_row += 1
 
 # Boundary labels
-Label(window, text="Lower bound", font=("Arial Bold", 20), wraplength=600).grid(column=1, row=2)
-Label(window, text="Upper bound", font=("Arial Bold", 20), wraplength=600).grid(column=2, row=2)
+Label(window, text="Lower bound", font=("Arial Bold", 20), wraplength=600).grid(column=1, row=current_row)
+Label(window, text="Upper bound", font=("Arial Bold", 20), wraplength=600).grid(column=2, row=current_row)
+current_row += 1
 
 # HSV class storing the HSV values
 class HSV():
@@ -44,15 +47,16 @@ class HSV():
         self.values = {
             'lower': lower,
             'upper': upper,
-            'kernel_size': kernel_size
+            'kernel_size': kernel_size,
+            'image_index': 0
         }
         
         # Figure
-        self.fig1, self.fig2, self.fig3 = Figure(figsize=(1, 1)), Figure(figsize=(1, 1)), Figure(figsize=(10, 10))
+        self.fig1, self.fig2, self.fig3 = Figure(figsize=(1, 1)), Figure(figsize=(1, 1)), Figure(figsize=(6, 6))
         self.canvas1, self.canvas2, self.canvas3 = FigureCanvasTkAgg(self.fig1, master=window), FigureCanvasTkAgg(self.fig2, master=window), FigureCanvasTkAgg(self.fig3, master=window)
-        self.canvas1.get_tk_widget().grid(column=1, row=3)
-        self.canvas2.get_tk_widget().grid(column=2, row=3)
-        self.canvas3.get_tk_widget().grid(row=8, rowspan=3, columnspan=3)
+        self.canvas1.get_tk_widget().grid(column=1, row=current_row)
+        self.canvas2.get_tk_widget().grid(column=2, row=current_row)
+        self.canvas3.get_tk_widget().grid(row=0, columnspan=3)
 
         self.ax1 = self.fig1.add_subplot(1,1,1)
         self.ax2 = self.fig2.add_subplot(111)
@@ -74,7 +78,16 @@ class HSV():
                 self.values[type][hsv_index] = int(val)
             self.update_figure()
         return update
-    
+
+    def next_image(self):
+        self.values['image_index'] += 1
+        self.update_figure()
+
+    def previous_image(self):
+        if hsv.values['image_index'] > 0:
+            self.values['image_index'] -= 1
+            self.update_figure()
+
     def update_figure(self):
         self.ax1.clear()
         self.ax2.clear()
@@ -84,9 +97,9 @@ class HSV():
         self.ax3_4.clear()
 
         img_side1, img_filtered_side1 = filter_blue(
-            paths[index][0], lower=self.values['lower'], upper=self.values['upper'], kernel_size=2*self.values['kernel_size']+1)
+            paths[self.values['image_index']][0], lower=self.values['lower'], upper=self.values['upper'], kernel_size=2*self.values['kernel_size']+1)
         img_side2, img_filtered_side2 = filter_blue(
-            paths[index][1], lower=self.values['lower'], upper=self.values['upper'], kernel_size=2*self.values['kernel_size']+1)
+            paths[self.values['image_index']][1], lower=self.values['lower'], upper=self.values['upper'], kernel_size=2*self.values['kernel_size']+1)
         self.ax1.imshow(hsv_to_rgb((np.array(self.values['lower']).reshape(1,1,3)) / 255))
         self.ax2.imshow(hsv_to_rgb((np.array(self.values['upper']).reshape(1,1,3)) / 255))
         self.ax3_1.imshow(img_side1)
@@ -110,28 +123,41 @@ hsv = HSV()
 
 # HSV sliders
 sliders = {}
-hsv_col = 0
-hsv_row = 4
-types = ["lower", "upper", "kernel_size"]
+current_row += 1
+init_col = 0
+types = ["lower", "upper"]
 hsv_labels = ["Hue", "Saturation", "Value"]
-for t in range(len(types)):
-    if types[t] == "kernel_size":
-        Label(window, text="Kernel size", font=("Arial Bold", 20)).grid(column=hsv_col, row=len(types)+hsv_row)
-        slider = Scale(window, from_=1, to=99, orient=HORIZONTAL, command=hsv.update_factory("kernel_size"), cursor = 'hand2')
-        slider.set(int(hsv.values["kernel_size"]))
-        sliders["kernel_size"] = slider
-        sliders["kernel_size"].grid(column=hsv_col+1, row=len(types)+hsv_row)
-    else:
-        sliders[types[t]] = []
-        for i in range(3):
-            if t == 0:
-                Label(window, text=hsv_labels[i], font=("Arial Bold", 20)).grid(column=hsv_col, row=i+hsv_row)
 
-            slider = Scale(window, from_=0, to=255, orient=HORIZONTAL, command=hsv.update_factory(types[t], i), cursor = 'hand2')
-            slider.set(int(hsv.values[types[t]][i]))
-            sliders[types[t]].append(slider)
-            sliders[types[t]][i].grid(column=t+hsv_col+1, row=i+hsv_row)
-        
+for t in range(len(types)):
+    sliders[types[t]] = []
+    for i in range(3):
+        if t == 0:
+            Label(window, text=hsv_labels[i], font=("Arial Bold", 20)).grid(column=init_col, row=current_row+i)
+
+        slider = Scale(window, from_=0, to=255, orient=HORIZONTAL, command=hsv.update_factory(types[t], i), cursor = 'hand2')
+        slider.set(int(hsv.values[types[t]][i]))
+        sliders[types[t]].append(slider)
+        sliders[types[t]][i].grid(column=t+init_col+1, row=current_row+i)
+
+current_row += 3
+
+# Kernel slider
+Label(window, text="Kernel size", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
+slider = Scale(window, from_=1, to=99, orient=HORIZONTAL, command=hsv.update_factory("kernel_size"), cursor = 'hand2')
+slider.set(int(hsv.values["kernel_size"]))
+sliders["kernel_size"] = slider
+sliders["kernel_size"].grid(column=init_col+1, row=current_row)
+current_row += 1
+
+# Image index
+Label(window, text="Image", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)    
+Button(window, text="Previous", command=hsv.previous_image).grid(column=1, row=current_row)
+Button(window, text="Next", command=hsv.next_image).grid(column=2, row=current_row)
+current_row +=1
+
+# Open/Save label
+Label(window, text="Open/Save values", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
+
 # Open function
 def open_callback():
     path = filedialog.askopenfilename(initialdir = "./boundaries",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
@@ -142,8 +168,7 @@ def open_callback():
         for i in range(3):
             sliders[boundary][i].set(int(dic[boundary][i]))
 
-open_button = Button(window, text="OPEN", command=open_callback)
-open_button.grid(column=0, row=1)
+Button(window, text="OPEN", command=open_callback).grid(column=1, row=current_row)
         
 # Save function
 def save_callback():
@@ -153,7 +178,6 @@ def save_callback():
     f.write(str(hsv.values))
     f.close()
         
-save_button = Button(window, text="SAVE", command=save_callback)
-save_button.grid(column=1, row=1)
+Button(window, text="SAVE", command=save_callback).grid(column=2, row=current_row)
 
 window.mainloop()

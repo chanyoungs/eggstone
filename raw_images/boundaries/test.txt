@@ -1,1 +1,1 @@
-{'lower': [86, 49, 184], 'upper': [165, 146, 255], 'kernel_size': 15}
+{'lower': [86, 49, 184], 'upper': [165, 195, 255], 'kernel_size': 10, 'image_index': 2}
