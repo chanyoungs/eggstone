@@ -6,10 +6,10 @@ def bgr2rgb(bgr_img):
     b,g,r = cv2.split(bgr_img)       # get b,g,r
     return cv2.merge([r,g,b])     # switch it to rgb
 
-def filter_blue(path, lower=(25, 40, 50), upper=(100, 255, 255)):
+def filter_blue(path, lower=(25, 40, 50), upper=(100, 255, 255), kernel_size=25):
     img = cv2.imread(path)
     height,width,depth = img.shape
-    blurred_img = cv2.GaussianBlur(img, (25, 25), 0)
+    blurred_img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
     hsv = cv2.cvtColor(blurred_img, cv2.COLOR_BGR2HSV)
 
     mask = cv2.inRange(hsv, np.array(lower, dtype='uint8'), np.array(upper, dtype='uint8'))
