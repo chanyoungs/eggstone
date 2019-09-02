@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 from tkinter import *
 from tkinter import messagebox
@@ -21,34 +22,41 @@ instruction.grid(row=0, columnspan=3)
 class HSV():
     def __init__(self, lower=[100, 100, 100], upper=[255, 255, 255]):
         self.values = {
-            'lower': lower,
-            'upper': upper
+            'lower': np.array(lower),
+            'upper': np.array(upper)
         }
         
         # Figure
-        self.fig = Figure(figsize=(5, 4), dpi=100)
+        self.fig1, self.fig2 = Figure(figsize=(5, 4), dpi=100), Figure(figsize=(5, 4), dpi=100)
+        self.canvas1, self.canvas2 = FigureCanvasTkAgg(self.fig1, master=window), FigureCanvasTkAgg(self.fig2, master=window)
+        self.canvas1.get_tk_widget().grid(column=1, row=8)
+        self.canvas2.get_tk_widget().grid(column=2, row=8)
         # t = np.arange(0, 3, .01)
-        self.ax = self.fig.add_subplot(111)
+        self.ax1 = self.fig1.add_subplot(111)
+        self.ax2 = self.fig2.add_subplot(111)
 
-        img_hsv = np.zeros((100, 100, 3)) * self.values['lower']
-        img_rgb = hsv_to_rgb(img_hsv)
-        self.ax.imshow(img_rgb)
-        self.canvas = FigureCanvasTkAgg(self.fig, master=window)  # A tk.DrawingArea.
-        self.canvas.draw()
-        self.canvas.get_tk_widget().grid(column=1, row=8)
-
+        self.update_figure()
 
     def update_factory(self, lower_upper, hsv_index):
         def update(val):
             self.values[lower_upper][hsv_index] = val
             print(self.values)
-
-        img_hsv = np.zeros((100, 100, 3)) * self.values['lower'] / 255
-        img_rgb = hsv_to_rgb(img_hsv)
-        self.ax.imshow(img_rgb)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().grid(column=1, row=8)
+            
+            self.update_figure()
         return update
+    
+    def update_figure(self):
+        self.ax1.clear()
+        self.ax2.clear()
+        
+        self.ax1.imshow(hsv_to_rgb(
+            np.zeros((10, 10, 3)) + (self.values['lower'] / 255)))
+        self.ax2.imshow(hsv_to_rgb(
+            np.zeros((10, 10, 3)) + (self.values['upper'] / 255)))
+
+        self.canvas1.draw()
+        self.canvas2.draw()
+
         
 hsv = HSV()
 
@@ -71,15 +79,12 @@ for b in range(len(boundaries)):
 # Open function
 def open_callback():
     path = filedialog.askopenfilename(initialdir = "./boundaries",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
-    print(os.getcwd())
     with open(path, 'r') as dic_txt:
         dic = eval(dic_txt.read())
         
     for boundary in ['lower', 'upper']:
         for i in range(3):
             hsv_sliders[boundary][i].set(dic[boundary][i])
-
-    print(hsv.values)
 
 open_button = Button(window, text="OPEN", command=open_callback)
 open_button.grid(column=0, row=1)
@@ -96,6 +101,5 @@ def save_callback():
         
 save_button = Button(window, text="SAVE", command=save_callback)
 save_button.grid(column=1, row=1)
-
 
 window.mainloop()
