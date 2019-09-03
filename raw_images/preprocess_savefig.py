@@ -1,11 +1,10 @@
 import os
-print(os.getcwd())
 from contour_detection_bean import filter_bean
 from contour_detection_blue import filter_blue
 from contour_detection_black import filter_black
 import matplotlib.pyplot as plt
 
-def preprocess(progressbar,
+def preprocess_savefig(progressbar,
                paths,
                hsv_lower=(70, 50, 0),
                hsv_upper=(150, 110, 255),

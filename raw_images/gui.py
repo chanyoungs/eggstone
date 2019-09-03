@@ -12,18 +12,18 @@ from matplotlib.figure import Figure
 from matplotlib.colors import hsv_to_rgb
 
 import contour_detection_blue
-import preprocess
+import preprocess_savefig
 
 import importlib
 importlib.reload(contour_detection_blue)
-importlib.reload(preprocess)
+importlib.reload(preprocess_savefig)
 
 from contour_detection_blue import filter_blue
-from preprocess import preprocess
+from preprocess_savefig import preprocess_savefig
 
 root = "defective"
 paths = []
-for set in range(5):
+for set in range(1):
     for i in range(16):
         paths.append([
             os.path.join(root, str(set+1), "Side1", f'{i+1}.jpg'),
@@ -56,10 +56,10 @@ class GUI():
             'kernel_size': kernel_size
         }
         self.image_index = 0
-        self.no_images = 10
+        self.no_images = 5
         
         # Figure
-        self.fig1, self.fig2, self.fig3 = Figure(figsize=(1, 1)), Figure(figsize=(1, 1)), Figure(figsize=(self.no_images, 3))
+        self.fig1, self.fig2, self.fig3 = Figure(figsize=(1, 1)), Figure(figsize=(1, 1)), Figure(figsize=(2*self.no_images, 6))
         self.canvas1, self.canvas2, self.canvas3 = FigureCanvasTkAgg(self.fig1, master=window), FigureCanvasTkAgg(self.fig2, master=window), FigureCanvasTkAgg(self.fig3, master=window)
         self.canvas1.get_tk_widget().grid(column=1, row=current_row)
         self.canvas2.get_tk_widget().grid(column=2, row=current_row)
@@ -214,7 +214,7 @@ progressbar.grid(column=2, row=current_row)
 
 # Run all function
 def run_all_callback():
-    preprocess(
+    preprocess_savefig(
         progressbar=progressbar,
         paths=paths,
         hsv_lower=gui.values['hsv_lower'],
