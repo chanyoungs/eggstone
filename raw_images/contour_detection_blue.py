@@ -6,15 +6,19 @@ def bgr2rgb(bgr_img):
     b,g,r = cv2.split(bgr_img)       # get b,g,r
     return cv2.merge([r,g,b])     # switch it to rgb
 
-def filter_blue(path, lower=(25, 40, 50), upper=(100, 255, 255), kernel_size=25):
+def filter_blue(path, hsv_lower=(25, 40, 50), hsv_upper=(100, 255, 255), lum_lower=0, lum_upper=255, kernel_size=25):
     img = cv2.imread(path)
     height,width,depth = img.shape
     blurred_img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
     hsv = cv2.cvtColor(blurred_img, cv2.COLOR_BGR2HSV)
 
-    mask = cv2.inRange(hsv, np.array(lower, dtype='uint8'), np.array(upper, dtype='uint8'))
+    img_lum = 0.0722*blurred_img[:, :, 0] + 0.7152*blurred_img[:, :, 1] + 0.2126*blurred_img[:, :, 2] # Luminosity
+    mask_lum = cv2.inRange(img_lum, lum_lower, lum_upper)
+    mask_hsv = cv2.inRange(hsv, np.array(hsv_lower, dtype='uint8'), np.array(hsv_upper, dtype='uint8'))
+    mask = (255 - mask_hsv) * mask_lum
+    # mask = 255 - mask_hsv
 
-    _, contours, _ = cv2.findContours(255 - mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     max_area = 0
     max_contour = None
