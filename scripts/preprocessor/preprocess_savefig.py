@@ -1,7 +1,5 @@
 import os
-from contour_detection_bean import filter_bean
-from contour_detection_blue import filter_blue
-from contour_detection_black import filter_black
+from preprocess import preprocess
 import matplotlib.pyplot as plt
 
 def preprocess_savefig(
@@ -21,8 +19,8 @@ def preprocess_savefig(
         fig = plt.figure(figsize=(10, 10))
         
         for n in range(2):
-            imgs = filter_blue(
-                paths[p][n],
+            imgs = preprocess(
+                img_path=paths[p][n],
                 hsv_lower=hsv_lower,
                 hsv_upper=hsv_upper,
                 lum_lower=lum_lower,

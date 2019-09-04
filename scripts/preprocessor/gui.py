@@ -1,7 +1,6 @@
 from __future__ import division
 
 import os
-print(os.getcwd())
 from tkinter import Label, Button, ttk, Tk, Scale, HORIZONTAL, messagebox, filedialog
 
 import numpy as np
@@ -11,14 +10,14 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 from matplotlib.colors import hsv_to_rgb
 
-import contour_detection_blue
+import preprocess
 import preprocess_savefig
 
 import importlib
-importlib.reload(contour_detection_blue)
+importlib.reload(preprocess)
 importlib.reload(preprocess_savefig)
 
-from contour_detection_blue import filter_blue
+from preprocess import preprocess
 from preprocess_savefig import preprocess_savefig
 
 root = "../../raw_images/"
@@ -47,7 +46,7 @@ current_row += 1
 
 # HSV class storing the HSV values
 class GUI():
-    def __init__(self, hsv_lower=[100, 100, 100], hsv_upper=[255, 255, 255], lum_lower=0, lum_upper=255, kernel_size=10):
+    def __init__(self, hsv_lower=[100, 100, 100], hsv_upper=[255, 255, 255], lum_lower=0, lum_upper=255, kernel_size=25):
         self.values = {
             'hsv_lower': hsv_lower,
             'hsv_upper': hsv_upper,
@@ -82,8 +81,10 @@ class GUI():
 
     def update_factory(self, type, hsv_index=0):
         def update(val):
-            if type in ['lum_lower', 'lum_upper', 'kernel_size']:
+            if type in ['lum_lower', 'lum_upper']:
                 self.values[type] = int(val)
+            elif type == 'kernel_size':
+                self.values['kernel_size'] = 2 * int(val) + 1
             else:
                 self.values[type][hsv_index] = int(val)
             self.update_figure()
@@ -110,13 +111,13 @@ class GUI():
         imgs = []
         for i in range(self.image_index, self.image_index + self.no_images):
             for n in range(2):
-                imgs.append(filter_blue(
-                    paths[i][n],
+                imgs.append(preprocess(
+                    img_path=paths[i][n],
                     hsv_lower=self.values['hsv_lower'],
                     hsv_upper=self.values['hsv_upper'],
                     lum_lower=self.values['lum_lower'],
                     lum_upper=self.values['lum_upper'],
-                    kernel_size=2*self.values['kernel_size']+1))
+                    kernel_size=self.values['kernel_size']))
         
         self.ax1.imshow(hsv_to_rgb((np.array(self.values['hsv_lower']).reshape(1,1,3)) / 255))
         self.ax2.imshow(hsv_to_rgb((np.array(self.values['hsv_upper']).reshape(1,1,3)) / 255))
@@ -168,7 +169,7 @@ current_row += 2
 # Kernel slider
 Label(window, text="Kernel size", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
 slider = Scale(window, from_=1, to=99, orient=HORIZONTAL, command=gui.update_factory("kernel_size"), cursor = 'hand2')
-slider.set(gui.values["kernel_size"])
+slider.set((gui.values["kernel_size"] - 1) / 2)
 slider.grid(column=init_col+1, row=current_row)
 sliders["kernel_size"] = slider
 current_row += 1
@@ -192,7 +193,16 @@ def open_callback():
         for i in range(3):
             sliders[boundary][i].set(int(dic[boundary][i]))
     
-    sliders['kernel_size'].set(int(dic['kernel_size']))
+    sliders['kernel_size'].set((int(dic['kernel_size']) - 1) / 2)
+
+# Open default settings
+with open("boundaries/default.txt", 'r') as dic_txt:
+    dic = eval(dic_txt.read())
+for boundary in ['hsv_lower', 'hsv_upper']:
+    for i in range(3):
+        sliders[boundary][i].set(int(dic[boundary][i]))
+
+sliders['kernel_size'].set((int(dic['kernel_size']) - 1) / 2)
 
 Button(window, text="OPEN", command=open_callback).grid(column=1, row=current_row)
         
@@ -222,7 +232,7 @@ def run_all_callback():
         hsv_upper=gui.values['hsv_upper'],
         lum_lower=gui.values['lum_lower'],
         lum_upper=gui.values['lum_upper'],
-        kernel_size=2*gui.values['kernel_size']+1)
+        kernel_size=gui.values['kernel_size'])
 
 Label(window, text="Preprocess all", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
 Button(window, text="Run!", command=run_all_callback).grid(column=1, row=current_row)

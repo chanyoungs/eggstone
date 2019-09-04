@@ -3,11 +3,30 @@ import matplotlib.pyplot as plt
 import cv2
 
 def bgr2rgb(bgr_img):
-    b,g,r = cv2.split(bgr_img)       # get b,g,r
-    return cv2.merge([r,g,b])     # switch it to rgb
+    b, g, r = cv2.split(bgr_img)       # get b,g,r
+    return cv2.merge([r, g, b])     # switch it to rgb
 
-def filter_blue(path, hsv_lower=(25, 40, 50), hsv_upper=(100, 255, 255), lum_lower=0, lum_upper=255, kernel_size=25):
-    img = cv2.imread(path)
+def rgb2bgr(rgb_img):
+    r, g, b = cv2.split(rgb_img)       # get b,g,r
+    return cv2.merge([b, g, r])     # switch it to rgb
+
+def preprocess(input_np=None, img_path="", dic_path="", hsv_lower=(25, 40, 50), hsv_upper=(100, 255, 255), lum_lower=0, lum_upper=255, kernel_size=25):
+    if input_np is not None:
+        img = rgb2bgr(input_np)
+    elif img_path != "":
+        img = cv2.imread(img_path)
+    else:
+        raise NameError('No input given. Please give an img_path or input_np')
+
+    if dic_path != "":
+        with open(dic_path, 'r') as dic_txt:
+            dic = eval(dic_txt.read())
+        hsv_lower = dic['hsv_lower']
+        hsv_upper = dic['hsv_upper']
+        lum_lower = dic['lum_lower']
+        lum_lower = dic['lum_lower']
+        kernel_size = dic['kernel_size']        
+        
     height,width,depth = img.shape
     blurred_img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
     hsv = cv2.cvtColor(blurred_img, cv2.COLOR_BGR2HSV)
@@ -29,26 +48,11 @@ def filter_blue(path, hsv_lower=(25, 40, 50), hsv_upper=(100, 255, 255), lum_low
             max_contour = contour
             max_area = area
 
-    # Create an empty canvas to draw an ellipse mask on
+    # Create an empty canvas to draw the contour mask on
     mask2 = np.zeros((height,width), np.uint8)
-
-    # smooth_contour = cv2.approxPolyDP(curve=max_contour, epsilon=5, closed=True)
-    # cv2.drawContours(mask2, [smooth_contour], -1, 1, cv2.FILLED)
-    # blurred_mask2 = cv2.GaussianBlur(mask2, (5, 5), 0)
     cv2.drawContours(mask2, [max_contour], -1, 1, cv2.FILLED)
 
     # Do AND operation between the original image and the created mask
-    # img_filtered = cv2.bitwise_and(img, img, mask = mask2)
     img_filtered = cv2.bitwise_and(img, img, mask = mask2)
     
     return bgr2rgb(img), bgr2rgb(img_filtered)
-
-
-    # plt.subplot(121)
-    # plt.imshow(bgr2rgb(img))
-    # plt.xticks([]), plt.yticks([])
-
-    # plt.subplot(122)
-    # plt.imshow(bgr2rgb(img_filtered))
-    # plt.xticks([]), plt.yticks([])
-    # plt.show()
