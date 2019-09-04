@@ -1,7 +1,7 @@
 from __future__ import division
 
 import os
-
+print(os.getcwd())
 from tkinter import Label, Button, ttk, Tk, Scale, HORIZONTAL, messagebox, filedialog
 
 import numpy as np
@@ -21,13 +21,13 @@ importlib.reload(preprocess_savefig)
 from contour_detection_blue import filter_blue
 from preprocess_savefig import preprocess_savefig
 
-root = "defective"
+root = "../../raw_images/"
 paths = []
 for set in range(1):
     for i in range(16):
         paths.append([
-            os.path.join(root, str(set+1), "Side1", f'{i+1}.jpg'),
-            os.path.join(root, str(set+1), "Side2", f'{i+1}.jpg')
+            os.path.join(root, "defective", str(set+1), "Side1", f'{i+1}.jpg'),
+            os.path.join(root, "defective", str(set+1), "Side2", f'{i+1}.jpg')
         ])
 
 # Setup window
@@ -215,6 +215,7 @@ progressbar.grid(column=2, row=current_row)
 # Run all function
 def run_all_callback():
     preprocess_savefig(
+        root=root,
         progressbar=progressbar,
         paths=paths,
         hsv_lower=gui.values['hsv_lower'],

@@ -4,16 +4,16 @@ from contour_detection_blue import filter_blue
 from contour_detection_black import filter_black
 import matplotlib.pyplot as plt
 
-def preprocess_savefig(progressbar,
-               paths,
-               hsv_lower=(70, 50, 0),
-               hsv_upper=(150, 110, 255),
-               lum_lower=0,
-               lum_upper=255,
-               kernel_size=21):
+def preprocess_savefig(
+        root,
+        progressbar,
+        paths,
+        hsv_lower=(70, 50, 0),
+        hsv_upper=(150, 110, 255),
+        lum_lower=0,
+        lum_upper=255,
+        kernel_size=21):
     
-    root = "defective"
-
     title = ['Original', 'Filtered']
     progressbar["value"] = 0
     progressbar["maximum"] = len(paths)
@@ -36,7 +36,7 @@ def preprocess_savefig(progressbar,
                 plt.imshow(imgs[m])
                 plt.xticks([]), plt.yticks([])
                             
-        plt.savefig(os.path.join("preprocessed", f'bean_{p+1}'))
+        plt.savefig(os.path.join(root, "preprocessed", f'bean_{p+1}'))
         plt.close()
         progressbar["value"] += 1
         progressbar.update()
