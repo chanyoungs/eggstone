@@ -1,0 +1,1 @@
+{'hsv_lower': [86, 49, 150], 'hsv_upper': [165, 195, 255], 'lum_lower': 0, 'lum_upper': 240, 'kernel_size': 10, 'image_index': 10}

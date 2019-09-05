@@ -196,7 +196,7 @@ def open_callback():
     sliders['kernel_size'].set((int(dic['kernel_size']) - 1) / 2)
 
 # Open default settings
-with open("params/0_default.txt", 'r') as dic_txt:
+with open("params/default.txt", 'r') as dic_txt:
     dic = eval(dic_txt.read())
 for boundary in ['hsv_lower', 'hsv_upper']:
     for i in range(3):

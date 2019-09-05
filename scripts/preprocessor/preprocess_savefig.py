@@ -1,16 +1,8 @@
 import os
-from preprocess import preprocess
+from preprocessor import preprocess
 import matplotlib.pyplot as plt
 
-def preprocess_savefig(
-        root,
-        progressbar,
-        paths,
-        hsv_lower=(70, 50, 0),
-        hsv_upper=(150, 110, 255),
-        lum_lower=0,
-        lum_upper=255,
-        kernel_size=21):
+def preprocess_savefig(root, progressbar, paths, params):
     
     title = ['Original', 'Filtered']
     progressbar["value"] = 0
@@ -21,11 +13,7 @@ def preprocess_savefig(
         for n in range(2):
             imgs = preprocess(
                 img_path=paths[p][n],
-                hsv_lower=hsv_lower,
-                hsv_upper=hsv_upper,
-                lum_lower=lum_lower,
-                lum_upper=lum_upper,
-                kernel_size=kernel_size)
+                params=params)
 
             for m in range(2):
                 plt.subplot(2, 2, 2*n+m+1)

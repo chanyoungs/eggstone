@@ -1,0 +1,1 @@
+{'model': '128', 'model_type': 'acc', 'params': '0_default.txt'}
