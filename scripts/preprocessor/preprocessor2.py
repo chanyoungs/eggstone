@@ -11,7 +11,7 @@ def rgb2bgr(rgb_img):
     r, g, b = cv2.split(rgb_img)       # get b,g,r
     return cv2.merge([b, g, r])     # switch it to rgb
 
-def preprocess(img_np=None, img_path="", params_path="", params={}, size_out=(350, 350)):
+def preprocess(img_np=None, img_path="", params_path="", params={}):
     if img_np is not None:
         img = rgb2bgr(img_np)
     elif img_path != "":
@@ -34,7 +34,6 @@ def preprocess(img_np=None, img_path="", params_path="", params={}, size_out=(35
     mask_lum = cv2.inRange(img_lum, params["lum_lower"], params["lum_upper"])
     mask_hsv = cv2.inRange(hsv, np.array(params["hsv_lower"], dtype='uint8'), np.array(params["hsv_upper"], dtype='uint8'))
     mask = (255 - mask_hsv) * mask_lum
-    # mask = 255 - mask_hsv
 
     _, contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
@@ -47,33 +46,20 @@ def preprocess(img_np=None, img_path="", params_path="", params={}, size_out=(35
             max_contour = contour
             max_area = area
 
+    
     # Create an empty canvas to draw the contour mask on
     mask2 = np.zeros((height,width), np.uint8)
     cv2.drawContours(mask2, [max_contour], -1, 1, cv2.FILLED)
 
+    # Find centre of contour
+    M = cv2.moments(max_contour)
+    cX = int(M["m10"] / M["m00"])
+    cY = int(M["m01"] / M["m00"])
+    cv2.circle(mask2, (cX, cY), 7, (255, 255, 255), -1)
+    l = 100
+    cv.Rectangle(mask2, (cX - l, cY - l), (cX + l, cY + l), (0, 255, 0), thickness=1, lineType=8, shift=0)
+
     # Do AND operation between the original image and the created mask
     img_filtered = cv2.bitwise_and(img, img, mask = mask2)
-
-    x,y,w,h = cv2.boundingRect(max_contour)
-    # cv2.rectangle(img_filtered,(x,y),(x+w,y+h),(0,255,0),5)
-    # cv2.putText(img_filtered, str((w, h)), (256, 256), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 4)
-
-    w_out, h_out = size_out
-    focused = np.zeros((w_out, h_out, 3), np.uint8)
-    bean = img_filtered[y:y+h, x:x+w, :]
-    if w > 450 or h > 450:
-        print(bean.shape, focused[int(w_out/2)-int(w/2): int(w_out/2)+int(w/2)+1, int(h_out/2)-int(h/2): int(h_out/2)+int(h/2)+1].shape)
-    focused[int(h_out/2)-int(h/2): int(h_out/2)+int(h/2)+h%2, int(w_out/2)-int(w/2): int(w_out/2)+int(w/2)+w%2] = bean
-    # cv2.rectangle(focused, (0, 0),(450,450),(0,255,0),5)
-
-    # # Find centre of contour
-    # M = cv2.moments(max_contour)
-    # cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
-    # cX = int(M["m10"] / M["m00"])
-    # cY = int(M["m01"] / M["m00"])
-    # cv2.circle(img_filtered, (cX, cY), 7, (0, 0, 255), -1)
-    # l = 200
-    # cv2.rectangle(img_filtered, (cX - l, cY - l), (cX + l, cY + l), (0, 255, 0), 5)
-
-    # return bgr2rgb(img), bgr2rgb(img_filtered)
-    return bgr2rgb(img), bgr2rgb(focused)
+    
+    return bgr2rgb(img), bgr2rgb(img_filtered)

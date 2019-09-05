@@ -1,1 +1,1 @@
-{'hsv_lower': [105, 0, 0], 'hsv_upper': [176, 255, 255], 'lum_lower': 0, 'lum_upper': 255, 'kernel_size': 19}
+{'hsv_lower': [101, 0, 0], 'hsv_upper': [176, 255, 255], 'lum_lower': 0, 'lum_upper': 255, 'kernel_size': 19}

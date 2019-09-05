@@ -23,21 +23,21 @@ from preprocess_savefig import preprocess_savefig
 
 root = "../../raw_images/"
 paths = []
-for set in range(1):
+for set in range(10):
     for i in range(16):
         paths.append([
-            os.path.join(root, "defective", str(set+1), "Side1", f'{i+1}.jpg'),
-            os.path.join(root, "defective", str(set+1), "Side2", f'{i+1}.jpg')
+            os.path.join(root, "defective", "05.09.19/", str(set+1), "Side1", f'{i+1}.jpg'),
+            os.path.join(root, "defective", "05.09.19/", str(set+1), "Side2", f'{i+1}.jpg')
         ])
 
 # Setup window
 window=Tk()
-window.title("HSV mask hsv_lower and hsv_upper boundary values")
+window.title("HSV mask hsv_lower and hsv_upper boundary params")
 # window.geometry('350x200')
 
 current_row = 1
 # Instruction
-Label(window, text="Move the sliders to adjust the HSV mask hsv_lower and hsv_upper boundary values", font=("Arial Bold", 20), wraplength=600).grid(row=current_row, columnspan=3)
+Label(window, text="Move the sliders to adjust the HSV mask hsv_lower and hsv_upper boundary params", font=("Arial Bold", 20), wraplength=600).grid(row=current_row, columnspan=3)
 current_row += 1
  
 # Boundary labels
@@ -45,16 +45,14 @@ Label(window, text="Lower bound", font=("Arial Bold", 20), wraplength=600).grid(
 Label(window, text="Upper bound", font=("Arial Bold", 20), wraplength=600).grid(column=2, row=current_row)
 current_row += 1
 
-# HSV class storing the HSV values
+# Open default settings
+with open("params/0_default.txt", 'r') as dic_txt:
+    params = eval(dic_txt.read())
+
+# HSV class storing the HSV params
 class GUI():
-    def __init__(self, hsv_lower=[100, 100, 100], hsv_upper=[255, 255, 255], lum_lower=0, lum_upper=255, kernel_size=25):
-        self.values = {
-            'hsv_lower': hsv_lower,
-            'hsv_upper': hsv_upper,
-            'lum_lower': lum_lower,
-            'lum_upper': lum_upper,
-            'kernel_size': kernel_size
-        }
+    def __init__(self, params=params):
+        self.params = params
         self.image_index = 0
         self.no_images = 5
         
@@ -83,11 +81,11 @@ class GUI():
     def update_factory(self, type, hsv_index=0):
         def update(val):
             if type in ['lum_lower', 'lum_upper']:
-                self.values[type] = int(val)
+                self.params[type] = int(val)
             elif type == 'kernel_size':
-                self.values['kernel_size'] = 2 * int(val) + 1
+                self.params['kernel_size'] = 2 * int(val) + 1
             else:
-                self.values[type][hsv_index] = int(val)
+                self.params[type][hsv_index] = int(val)
             self.update_figure()
         return update
 
@@ -112,15 +110,15 @@ class GUI():
         imgs = []
         for i in range(self.image_index, self.image_index + self.no_images):
             for n in range(2):
-                params = {"hsv_lower": self.values["hsv_lower"],
-                          "hsv_upper": self.values["hsv_upper"],
-                          "lum_lower": self.values["lum_lower"],
-                          "lum_upper": self.values["lum_upper"],
-                          "kernel_size": self.values["kernel_size"]}
+                params = {"hsv_lower": self.params["hsv_lower"],
+                          "hsv_upper": self.params["hsv_upper"],
+                          "lum_lower": self.params["lum_lower"],
+                          "lum_upper": self.params["lum_upper"],
+                          "kernel_size": self.params["kernel_size"]}
                 imgs.append(preprocess(img_path=paths[i][n], params=params))
         
-        self.ax1.imshow(hsv_to_rgb((np.array(self.values['hsv_lower']).reshape(1,1,3)) / 255))
-        self.ax2.imshow(hsv_to_rgb((np.array(self.values['hsv_upper']).reshape(1,1,3)) / 255))
+        self.ax1.imshow(hsv_to_rgb((np.array(self.params['hsv_lower']).reshape(1,1,3)) / 255))
+        self.ax2.imshow(hsv_to_rgb((np.array(self.params['hsv_upper']).reshape(1,1,3)) / 255))
 
         for i in range(self.no_images):
             for n in range(2):
@@ -151,7 +149,7 @@ for t in range(len(hsv_types)):
             Label(window, text=hsv_labels[i], font=("Arial Bold", 20)).grid(column=init_col, row=current_row+i)
 
         slider = Scale(window, from_=0, to=255, orient=HORIZONTAL, command=gui.update_factory(hsv_types[t], i), cursor = 'hand2')
-        slider.set(gui.values[hsv_types[t]][i])
+        slider.set(gui.params[hsv_types[t]][i])
         slider.grid(column=t+init_col+1, row=current_row+i)
         sliders[hsv_types[t]].append(slider)
 current_row += 3
@@ -161,7 +159,7 @@ lum_types = ["lum_lower", "lum_upper"]
 Label(window, text="Luminosity", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
 for t in range(len(lum_types)):
     slider = Scale(window, from_=0, to=255, orient=HORIZONTAL, command=gui.update_factory(lum_types[t]), cursor = 'hand2')
-    slider.set(gui.values[lum_types[t]])
+    slider.set(gui.params[lum_types[t]])
     slider.grid(column=t+init_col+1, row=current_row)
     sliders[lum_types[t]] = slider
 current_row += 2
@@ -169,7 +167,7 @@ current_row += 2
 # Kernel slider
 Label(window, text="Kernel size", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
 slider = Scale(window, from_=1, to=99, orient=HORIZONTAL, command=gui.update_factory("kernel_size"), cursor = 'hand2')
-slider.set((gui.values["kernel_size"] - 1) / 2)
+slider.set((gui.params["kernel_size"] - 1) / 2)
 slider.grid(column=init_col+1, row=current_row)
 sliders["kernel_size"] = slider
 current_row += 1
@@ -181,7 +179,7 @@ Button(window, text="Next", command=gui.next_image).grid(column=2, row=current_r
 current_row += 1
 
 # Open/Save label
-Label(window, text="Open/Save values", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
+Label(window, text="Open/Save params", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
 
 # Open function
 def open_callback():
@@ -195,15 +193,6 @@ def open_callback():
     
     sliders['kernel_size'].set((int(dic['kernel_size']) - 1) / 2)
 
-# Open default settings
-with open("params/0_default.txt", 'r') as dic_txt:
-    dic = eval(dic_txt.read())
-for boundary in ['hsv_lower', 'hsv_upper']:
-    for i in range(3):
-        sliders[boundary][i].set(int(dic[boundary][i]))
-
-sliders['kernel_size'].set((int(dic['kernel_size']) - 1) / 2)
-
 Button(window, text="OPEN", command=open_callback).grid(column=1, row=current_row)
         
 # Save function
@@ -211,7 +200,7 @@ def save_callback():
     f = filedialog.asksaveasfile(initialdir = "./params", defaultextension=".txt")
     if f is None:
         return
-    f.write(str(gui.values))
+    f.write(str(gui.params))
     f.close()
         
 Button(window, text="SAVE", command=save_callback).grid(column=2, row=current_row)
@@ -224,11 +213,11 @@ progressbar.grid(column=2, row=current_row)
 
 # Run all function
 def run_all_callback():
-    params = {"hsv_lower": gui.values["hsv_lower"],
-              "hsv_upper": gui.values["hsv_upper"],
-              "lum_lower": gui.values["lum_lower"],
-              "lum_upper": gui.values["lum_upper"],
-              "kernel_size": gui.values["kernel_size"]}
+    params = {"hsv_lower": gui.params["hsv_lower"],
+              "hsv_upper": gui.params["hsv_upper"],
+              "lum_lower": gui.params["lum_lower"],
+              "lum_upper": gui.params["lum_upper"],
+              "kernel_size": gui.params["kernel_size"]}
     preprocess_savefig(root=root,
                        progressbar=progressbar,
                        paths=paths,
