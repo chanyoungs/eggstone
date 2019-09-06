@@ -11,7 +11,7 @@ def rgb2bgr(rgb_img):
     r, g, b = cv2.split(rgb_img)       # get b,g,r
     return cv2.merge([b, g, r])     # switch it to rgb
 
-def preprocess(img_np=None, img_path="", params_path="", params={}, size_out=(350, 350)):
+def preprocess(img_np=None, img_path="", params_path="", params={}, size_out=(400, 400)):
     if img_np is not None:
         img = rgb2bgr(img_np)
     elif img_path != "":

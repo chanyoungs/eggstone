@@ -21,14 +21,17 @@ importlib.reload(preprocess_savefig)
 from preprocessor import preprocess
 from preprocess_savefig import preprocess_savefig
 
-root = "../../raw_images/"
+# type = "defective"
+type = "healthy"
+
+root = "../../images/"
 paths = []
-for set in range(10):
+for set in range(56):
     for i in range(16):
-        paths.append([
-            os.path.join(root, "defective", "05.09.19/", str(set+1), "Side1", f'{i+1}.jpg'),
-            os.path.join(root, "defective", "05.09.19/", str(set+1), "Side2", f'{i+1}.jpg')
-        ])
+        sides = []
+        for side in range(2):
+            sides.append(os.path.join(root, "raw", type, str(set+1), f"Side{side+1}", f"{i+1}.jpg"))
+        paths.append(sides)
 
 # Setup window
 window=Tk()
@@ -131,7 +134,7 @@ class GUI():
         self.canvas1.draw()
         self.canvas2.draw()
         self.canvas3.draw()
-
+    
         
 gui = GUI()
 
@@ -221,7 +224,8 @@ def run_all_callback():
     preprocess_savefig(root=root,
                        progressbar=progressbar,
                        paths=paths,
-                       params=params)
+                       params=params,
+                       type=type)
 
 Label(window, text="Preprocess all", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
 Button(window, text="Run!", command=run_all_callback).grid(column=1, row=current_row)

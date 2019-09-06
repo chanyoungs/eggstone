@@ -1,6 +1,7 @@
 __pycache__/
 data/
 images/
+raw_images/
 outputs/
 production/
 .*
