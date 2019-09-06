@@ -22,7 +22,7 @@ def preprocess_savefig(root, progressbar, paths, params):
                 plt.imshow(imgs[m])
                 plt.xticks([]), plt.yticks([])
                             
-        plt.savefig(os.path.join(root, "preprocessed", f'bean_{p+1}'))
+        plt.savefig(os.path.join(root, "preprocessed", f"bean_{p+1}"))
         plt.close()
         progressbar["value"] += 1
         progressbar.update()

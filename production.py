@@ -16,13 +16,17 @@ if os.path.isdir(name):
 os.makedirs(name)
 print(f"\nNew folder '{name}' created.")
 
-# Copy classifier.py
-shutil.copy2(os.path.join("scripts", "classifier", "classifier.py"), os.path.join(name, "classifier.py"))
-print("\nclassifier.py copied")
-
 # Copy preprocessor.py
 shutil.copy2(os.path.join("scripts", "preprocessor", "preprocessor.py"), os.path.join(name, "preprocessor.py"))
 print("\npreprocessor.py copied")
+
+# Copy params
+shutil.copytree(os.path.join("scripts", "preprocessor", "params"), os.path.join(name, "params"))
+print(f"\nPreprocessing parameters copied")
+
+# Copy classifier.py
+shutil.copy2(os.path.join("scripts", "classifier", "classifier.py"), os.path.join(name, "classifier.py"))
+print("\nclassifier.py copied")
 
 # Copy setup.py
 shutil.copy2(os.path.join("scripts", "classifier", "setup.py"), os.path.join(name, "setup.py"))
@@ -32,17 +36,13 @@ print("\nsetup.py copied")
 shutil.copy2(os.path.join("scripts", "classifier", "settings.txt"), os.path.join(name, "settings.txt"))
 print("\nsettings.txt copied")
 
-# Copy params
-shutil.copytree(os.path.join("scripts", "preprocessor", "params"), os.path.join(name, "params"))
-print(f"\nPreprocessing parameters copied")
-
 # Copy demo.py
 shutil.copy2(os.path.join("scripts", "classifier", "demo.py"), os.path.join(name, "demo.py"))
 print("\ndemo.py copied")
 
-# # Create models folder
-# os.makedirs(os.path.join(name, "models"))
-# print(f"\n'{name}/models' created.")
+# Copy data_demo
+shutil.copytree(os.path.join("scripts", "classifier", "data_demo"), os.path.join(name, "data_demo"))
+print(f"\nPreprocessing data_demo copied")
 
 # Copy all models
 model_folders = next(os.walk("outputs"))[1]
