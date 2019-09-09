@@ -24,7 +24,11 @@ set_session(sess)  # set this TensorFlow session as the default session for Kera
 
 class Predict():
     
+<<<<<<< HEAD
     def __init__(self, setup=False):
+=======
+    def __init__(self, setup=False, p=None):
+>>>>>>> 31030d58d8e04add443d46f4eb4ce414be3fe650
         if not os.path.isfile("settings.txt") or setup:
             run_setup()
         # Load settings
@@ -32,12 +36,20 @@ class Predict():
             settings = eval(f.read())
         self.params_name = settings["params"]
         self.p_threshold = settings["p_threshold"]
+<<<<<<< HEAD
+=======
+        
+        # Load model - DONE
+        # self.model = load_model(os.path.join("models", settings["model"], f"best_{settings['model_type']}_optimised.h5"))
+        self.model = load_model(os.path.join("models", settings["model"], f"best_{settings['model_type']}.h5"))
+>>>>>>> 31030d58d8e04add443d46f4eb4ce414be3fe650
                            
         # Load x_train_mean - Done
         self.pixel_mean = np.load(os.path.join("models", settings["model"], "pixel_mean.npy"))
                            
         # Load x_train_mean - Done
         self.pixel_mean = np.load(os.path.join("models", settings["model"], "pixel_mean.npy"))
+<<<<<<< HEAD
 
         print("Initialising model...")
         # Load model - DONE
@@ -47,6 +59,11 @@ class Predict():
         # Predict once for initialisation. For some reason, the first prediction always take more time
         self.model.predict(np.array([self.pixel_mean]))
         print("Done!")
+=======
+
+        # Predict once for initialisation. For some reason, the first prediction always take more time
+        self.model.predict(np.array([self.pixel_mean]))
+>>>>>>> 31030d58d8e04add443d46f4eb4ce414be3fe650
 
     def predict(self, img, show_image=False, print_details=False, label=None):
         # -----------------------------------
@@ -57,11 +74,19 @@ class Predict():
         img /= 255.
         
         # Preprocess image
+<<<<<<< HEAD
         _, img_preprocessed = preprocess(img_np=img, params_path=os.path.join("params", self.params_name))
 
         # Resize image - Done
         # img_resized = resize(img, self.pixel_mean.shape, anti_aliasing=True)
         img_resized = resize(img_preprocessed, self.pixel_mean.shape, anti_aliasing=True)
+=======
+        _, img_preprocessed = preprocess(img_np=img/255., params_path=os.path.join("params", self.params_name))
+
+        # Resize image - Done
+        img_resized = resize(img, self.pixel_mean.shape, anti_aliasing=True)
+        # img_resized = resize(img_preprocessed, self.pixel_mean.shape, anti_aliasing=True)
+>>>>>>> 31030d58d8e04add443d46f4eb4ce414be3fe650
         
         # Subtract pixel mean - Done
         img_spm = img_resized - self.pixel_mean
