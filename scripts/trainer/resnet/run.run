@@ -1,3 +1,4 @@
-python main.py --model 64 --data 64
-python main.py --model 128 --data 128
-python main.py --model 256 --data 256
+# python main.py --model test --data 64x64
+# python main.py --model 128 --data 128
+# python main.py --model 256 --data 256
+python main.py --model 256x128 --data 256x128

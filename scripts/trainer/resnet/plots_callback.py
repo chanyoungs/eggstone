@@ -42,6 +42,9 @@ class PlotsCallback(keras.callbacks.Callback):
         auc_value = auc(fpr, tpr)
         self.val_aucs.append(auc_value)
 
+        y_loss_m, y_acc_M, y_auc_M = min(self.val_losses), max(self.val_accuracies), max(self.val_aucs)
+        x_loss_m, x_acc_M, x_auc_M = self.val_losses.index(y_loss_m), self.val_accuracies.index(y_acc_M), self.val_aucs.index(y_auc_M)
+
         # Plot figures
         fig = plt.figure(figsize=(20, 20))
         fig.patch.set_facecolor('white')
@@ -49,29 +52,58 @@ class PlotsCallback(keras.callbacks.Callback):
 
         # Accuracies and losses
         gs = gridspec.GridSpec(2, 2)
-        plt.subplot(gs[0, :])
-        plt.title(f"Accuracies, losses and AUC")
-        plt.plot(self.x, self.losses,
-                 label=f"loss {logs.get('loss'): .4}")
-        plt.plot(self.x, self.val_losses,
-                 label=f"val_loss {logs.get('val_loss'): .4}")
+        plt.subplot(gs[0, 0])
+        plt.title(f"Accuracies and AUC")
         plt.plot(self.x, self.accuracies,
                  label=f"acc {logs.get('acc'): .4}")
         plt.plot(self.x, self.val_accuracies,
                  label=f"val_acc {logs.get('val_acc'): .4}")
         plt.plot(self.x, self.val_aucs,
                  label=f"val_auc {auc_value: .4}")
-        
-        y_loss_m, y_acc_M, y_auc_M = min(self.val_losses), max(self.val_accuracies), max(self.val_aucs)
-        x_loss_m, x_acc_M, x_auc_M = self.val_losses.index(y_loss_m), self.val_accuracies.index(y_acc_M), self.val_aucs.index(y_auc_M)
 
-        plt.plot(x_loss_m, y_loss_m ,'o')
-        plt.annotate(f"Min val_loss: {y_loss_m: .4} ep: {x_loss_m}", xy=(x_loss_m, y_loss_m))
         plt.plot(x_acc_M, y_acc_M ,'o')
         plt.annotate(f"Max val_acc: {y_acc_M: .4} ep: {x_acc_M}", xy=(x_acc_M, y_acc_M))
         plt.plot(x_auc_M, y_auc_M ,'o')
         plt.annotate(f"Max val_auc: {y_auc_M: .4} ep: {x_auc_M}", xy=(x_auc_M, y_auc_M))
         plt.legend()
+        
+        plt.subplot(gs[0, 1])
+        plt.title(f"Losses")
+        plt.plot(self.x, self.losses,
+                 label=f"loss {logs.get('loss'): .4}")
+        plt.plot(self.x, self.val_losses,
+                 label=f"val_loss {logs.get('val_loss'): .4}")
+
+        plt.plot(x_loss_m, y_loss_m ,'o')
+        plt.annotate(f"Min val_loss: {y_loss_m: .4} ep: {x_loss_m}", xy=(x_loss_m, y_loss_m))
+        plt.legend()
+        #         # Accuracies and losses
+        # gs = gridspec.GridSpec(2, 2)
+        # plt.subplot(gs[0, :])
+        # plt.title(f"Accuracies, losses and AUC")
+        # plt.plot(self.x, self.losses,
+        #          label=f"loss {logs.get('loss'): .4}")
+        # plt.plot(self.x, self.val_losses,
+        #          label=f"val_loss {logs.get('val_loss'): .4}")
+        # plt.plot(self.x, self.accuracies,
+        #          label=f"acc {logs.get('acc'): .4}")
+        # plt.plot(self.x, self.val_accuracies,
+        #          label=f"val_acc {logs.get('val_acc'): .4}")
+        # plt.plot(self.x, self.val_aucs,
+        #          label=f"val_auc {auc_value: .4}")
+        
+        # y_loss_m, y_acc_M, y_auc_M = min(self.val_losses), max(self.val_accuracies), max(self.val_aucs)
+        # x_loss_m, x_acc_M, x_auc_M = self.val_losses.index(y_loss_m), self.val_accuracies.index(y_acc_M), self.val_aucs.index(y_auc_M)
+
+        # plt.plot(x_loss_m, y_loss_m ,'o')
+        # plt.annotate(f"Min val_loss: {y_loss_m: .4} ep: {x_loss_m}", xy=(x_loss_m, y_loss_m))
+        # plt.plot(x_acc_M, y_acc_M ,'o')
+        # plt.annotate(f"Max val_acc: {y_acc_M: .4} ep: {x_acc_M}", xy=(x_acc_M, y_acc_M))
+        # plt.plot(x_auc_M, y_auc_M ,'o')
+        # plt.annotate(f"Max val_auc: {y_auc_M: .4} ep: {x_auc_M}", xy=(x_auc_M, y_auc_M))
+        # plt.legend()
+        # plt.ylim(0, 1)
+
         
         # ROC Curve
         plt.subplot(gs[1, 0])

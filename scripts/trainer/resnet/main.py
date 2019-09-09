@@ -36,7 +36,7 @@ FLAGS = tf.app.flags.FLAGS
 # # ResNet1001| (111)| -----     | 92.39     | -----     | 95.08+-.14| ---(---)
 # # ---------------------------------------------------------------------------
 flags.DEFINE_string("model", "test", "Used to create directories and filenames")
-flags.DEFINE_string("data", "64", "Input dimensions")
+flags.DEFINE_string("data", "64x64", "Input dimensions")
 flags.DEFINE_boolean("optimise", False, "Set true to only optimise the existing model without training")
 flags.DEFINE_integer("n", 3, "Number of layers")
 flags.DEFINE_integer("version", 1, "Orig paper: version = 1 (ResNet v1), Improved ResNet: version = 2 (ResNet v2)")

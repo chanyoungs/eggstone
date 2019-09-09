@@ -26,7 +26,7 @@ type = "healthy"
 
 root = "../../images/"
 paths = []
-for set in range(56):
+for set in range(81):
     for i in range(16):
         sides = []
         for side in range(2):

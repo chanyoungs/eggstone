@@ -19,28 +19,13 @@ def preprocess_savefig(root, progressbar, paths, params, type):
     for p in range(len(paths)):
         img_join = np.zeros((shape[0]*2, shape[1], shape[2]), dtype='uint8')
         for n in range(2):
-<<<<<<< HEAD
             _, img_np = preprocess(img_path=paths[p][n], params=params)
             img_join[n*shape[0]: (n+1)*shape[0]] = img_np
             img_pil = Image.fromarray(img_np)
             img_pil.save(os.path.join(root, "preprocessed", "individual", type, f"bean{p+1}_side{n+1}.png"))
         img_pil = Image.fromarray(img_join)
         img_pil.save(os.path.join(root, "preprocessed", "joined", type, f"bean{p+1}.png"))
-=======
-            imgs = preprocess(
-                img_path=paths[p][n],
-                params=params)
 
-            for m in range(2):
-                plt.subplot(2, 2, 2*n+m+1)
-                if n == 0:
-                    plt.title(title[m])
-                plt.imshow(imgs[m])
-                plt.xticks([]), plt.yticks([])
-                            
-        plt.savefig(os.path.join(root, "preprocessed", f"bean_{p+1}"))
-        plt.close()
->>>>>>> 31030d58d8e04add443d46f4eb4ce414be3fe650
         progressbar["value"] += 1
         progressbar.update()
     progressbar["value"] = 0
