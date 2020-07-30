@@ -1,10 +1,13 @@
 import os
 
+module_directory = os.path.dirname(os.path.abspath(__file__))
+
+
 def run_setup():
     settings = {}
-    
-     # Choose model
-    models = next(os.walk("models"))[1]
+
+    # Choose model
+    models = next(os.walk(os.path.join(module_directory, "models")))[1]
     choose_model = "\nModel options:\n"
     for n in range(len(models)):
         choose_model += f"[{n+1}] {models[n]}\n"
@@ -22,7 +25,8 @@ def run_setup():
     settings["model_type"] = model_types[int(input(choose_model_type)) - 1]
 
     # Choose params
-    params_sets = [p for p in os.listdir("params") if p[-4:] == ".txt"]
+    params_sets = [p for p in os.listdir(os.path.join(
+        module_directory, "params")) if p[-4:] == ".txt"]
     choose_params = "\nParameters set options:\n"
     for n in range(len(params_sets)):
         choose_params += f"[{n+1}] {params_sets[n]}\n"
@@ -32,20 +36,24 @@ def run_setup():
 
     # Choose threshold
     while True:
-        p = input("\nChoose probability threshold.\nThe higher the threshold, the higher the standard of quality and the more beans it will filter out.\nType a floating point number between 0~1[e.g. 0.5]: ")
+        p = input(
+            "\nChoose probability threshold.\nThe higher the threshold, the higher the standard of quality and the more beans it will filter out.\nType a floating point number between 0~1[e.g. 0.5]: ")
         try:
             p = float(p)
             if 0 <= p and p <= 1:
                 settings["p_threshold"] = p
                 break
             else:
-                print(f"\nPlease type a number between 0 and 1. (You typed '{p}'): ")
+                print(
+                    f"\nPlease type a number between 0 and 1. (You typed '{p}'): ")
         except ValueError:
-            print(f"\nPlease type a number between 0 and 1. (You typed '{p}'): ")
+            print(
+                f"\nPlease type a number between 0 and 1. (You typed '{p}'): ")
 
-    with open("settings.txt", 'w') as f:
+    with open(os.path.join(module_directory, "settings.txt"), 'w') as f:
         f.write(str(settings))
     print(settings)
+
 
 if __name__ == '__main__':
     run_setup()

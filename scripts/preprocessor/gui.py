@@ -1,67 +1,73 @@
 from __future__ import division
+from preprocess_savefig import preprocess_savefig
+from preprocessor import preprocess
+import importlib
+import preprocess_savefig
+import preprocessor
+from matplotlib.colors import hsv_to_rgb
+from matplotlib.figure import Figure
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import numpy as np
+from tkinter import Label, Button, ttk, Tk, Scale, HORIZONTAL, messagebox, filedialog
 
 import os
 print(os.getcwd())
-from tkinter import Label, Button, ttk, Tk, Scale, HORIZONTAL, messagebox, filedialog
 
-import numpy as np
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backend_bases import key_press_handler
-from matplotlib.figure import Figure
-from matplotlib.colors import hsv_to_rgb
-
-import preprocessor
-import preprocess_savefig
-
-import importlib
 importlib.reload(preprocessor)
 importlib.reload(preprocess_savefig)
 
-from preprocessor import preprocess
-from preprocess_savefig import preprocess_savefig
 
 # type = "defective"
 type = "healthy"
-
-root = "../../images/"
+module_directory = os.path.dirname(os.path.abspath(__file__))
+root = os.path.join(module_directory, "..", "..", "images")
 paths = []
 for set in range(81):
     for i in range(16):
         sides = []
         for side in range(2):
-            sides.append(os.path.join(root, "raw", type, str(set+1), f"Side{side+1}", f"{i+1}.jpg"))
+            sides.append(os.path.join(root, "raw", type, str(
+                set+1), f"Side{side+1}", f"{i+1}.jpg"))
         paths.append(sides)
 
 # Setup window
-window=Tk()
+window = Tk()
 window.title("HSV mask hsv_lower and hsv_upper boundary params")
 # window.geometry('350x200')
 
 current_row = 1
 # Instruction
-Label(window, text="Move the sliders to adjust the HSV mask hsv_lower and hsv_upper boundary params", font=("Arial Bold", 20), wraplength=600).grid(row=current_row, columnspan=3)
+Label(window, text="Move the sliders to adjust the HSV mask hsv_lower and hsv_upper boundary params",
+      font=("Arial Bold", 20), wraplength=600).grid(row=current_row, columnspan=3)
 current_row += 1
- 
+
 # Boundary labels
-Label(window, text="Lower bound", font=("Arial Bold", 20), wraplength=600).grid(column=1, row=current_row)
-Label(window, text="Upper bound", font=("Arial Bold", 20), wraplength=600).grid(column=2, row=current_row)
+Label(window, text="Lower bound", font=("Arial Bold", 20),
+      wraplength=600).grid(column=1, row=current_row)
+Label(window, text="Upper bound", font=("Arial Bold", 20),
+      wraplength=600).grid(column=2, row=current_row)
 current_row += 1
 
 # Open default settings
-with open("params/0_default.txt", 'r') as dic_txt:
+with open(os.path.join(module_directory, "params", "0_default.txt"), 'r') as dic_txt:
     params = eval(dic_txt.read())
 
 # HSV class storing the HSV params
+
+
 class GUI():
     def __init__(self, params=params):
         self.params = params
         self.image_index = 0
         self.no_images = 5
-        
+
         # Figure
-        self.fig1, self.fig2, self.fig3 = Figure(figsize=(1, 1)), Figure(figsize=(1, 1)), Figure(figsize=(2*self.no_images, 6))
-        self.canvas1, self.canvas2, self.canvas3 = FigureCanvasTkAgg(self.fig1, master=window), FigureCanvasTkAgg(self.fig2, master=window), FigureCanvasTkAgg(self.fig3, master=window)
+        self.fig1, self.fig2, self.fig3 = Figure(figsize=(1, 1)), Figure(
+            figsize=(1, 1)), Figure(figsize=(2*self.no_images, 6))
+        self.canvas1, self.canvas2, self.canvas3 = FigureCanvasTkAgg(self.fig1, master=window), FigureCanvasTkAgg(
+            self.fig2, master=window), FigureCanvasTkAgg(self.fig3, master=window)
         self.canvas1.get_tk_widget().grid(column=1, row=current_row)
         self.canvas2.get_tk_widget().grid(column=2, row=current_row)
         self.canvas3.get_tk_widget().grid(row=0, columnspan=3)
@@ -78,7 +84,7 @@ class GUI():
 
         self.ax3s[0][0].set_title('Original')
         self.ax3s[0][1].set_title('Filtered')
-        
+
         self.update_figure()
 
     def update_factory(self, type, hsv_index=0):
@@ -119,9 +125,11 @@ class GUI():
                           "lum_upper": self.params["lum_upper"],
                           "kernel_size": self.params["kernel_size"]}
                 imgs.append(preprocess(img_path=paths[i][n], params=params))
-        
-        self.ax1.imshow(hsv_to_rgb((np.array(self.params['hsv_lower']).reshape(1,1,3)) / 255))
-        self.ax2.imshow(hsv_to_rgb((np.array(self.params['hsv_upper']).reshape(1,1,3)) / 255))
+
+        self.ax1.imshow(hsv_to_rgb(
+            (np.array(self.params['hsv_lower']).reshape(1, 1, 3)) / 255))
+        self.ax2.imshow(hsv_to_rgb(
+            (np.array(self.params['hsv_upper']).reshape(1, 1, 3)) / 255))
 
         for i in range(self.no_images):
             for n in range(2):
@@ -134,8 +142,8 @@ class GUI():
         self.canvas1.draw()
         self.canvas2.draw()
         self.canvas3.draw()
-    
-        
+
+
 gui = GUI()
 
 # HSV sliders
@@ -149,9 +157,11 @@ for t in range(len(hsv_types)):
     sliders[hsv_types[t]] = []
     for i in range(3):
         if t == 0:
-            Label(window, text=hsv_labels[i], font=("Arial Bold", 20)).grid(column=init_col, row=current_row+i)
+            Label(window, text=hsv_labels[i], font=("Arial Bold", 20)).grid(
+                column=init_col, row=current_row+i)
 
-        slider = Scale(window, from_=0, to=255, orient=HORIZONTAL, command=gui.update_factory(hsv_types[t], i), cursor = 'hand2')
+        slider = Scale(window, from_=0, to=255, orient=HORIZONTAL,
+                       command=gui.update_factory(hsv_types[t], i), cursor='hand2')
         slider.set(gui.params[hsv_types[t]][i])
         slider.grid(column=t+init_col+1, row=current_row+i)
         sliders[hsv_types[t]].append(slider)
@@ -159,58 +169,76 @@ current_row += 3
 
 # Luminosity sliders
 lum_types = ["lum_lower", "lum_upper"]
-Label(window, text="Luminosity", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
+Label(window, text="Luminosity", font=("Arial Bold", 20)).grid(
+    column=init_col, row=current_row)
 for t in range(len(lum_types)):
-    slider = Scale(window, from_=0, to=255, orient=HORIZONTAL, command=gui.update_factory(lum_types[t]), cursor = 'hand2')
+    slider = Scale(window, from_=0, to=255, orient=HORIZONTAL,
+                   command=gui.update_factory(lum_types[t]), cursor='hand2')
     slider.set(gui.params[lum_types[t]])
     slider.grid(column=t+init_col+1, row=current_row)
     sliders[lum_types[t]] = slider
 current_row += 2
 
 # Kernel slider
-Label(window, text="Kernel size", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
-slider = Scale(window, from_=1, to=99, orient=HORIZONTAL, command=gui.update_factory("kernel_size"), cursor = 'hand2')
+Label(window, text="Kernel size", font=("Arial Bold", 20)).grid(
+    column=init_col, row=current_row)
+slider = Scale(window, from_=1, to=99, orient=HORIZONTAL,
+               command=gui.update_factory("kernel_size"), cursor='hand2')
 slider.set((gui.params["kernel_size"] - 1) / 2)
 slider.grid(column=init_col+1, row=current_row)
 sliders["kernel_size"] = slider
 current_row += 1
 
 # Image index
-Label(window, text="Image", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)    
-Button(window, text="Previous", command=gui.previous_image).grid(column=1, row=current_row)
-Button(window, text="Next", command=gui.next_image).grid(column=2, row=current_row)
+Label(window, text="Image", font=("Arial Bold", 20)).grid(
+    column=init_col, row=current_row)
+Button(window, text="Previous", command=gui.previous_image).grid(
+    column=1, row=current_row)
+Button(window, text="Next", command=gui.next_image).grid(
+    column=2, row=current_row)
 current_row += 1
 
 # Open/Save label
-Label(window, text="Open/Save params", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
+Label(window, text="Open/Save params", font=("Arial Bold", 20)
+      ).grid(column=init_col, row=current_row)
 
 # Open function
+
+
 def open_callback():
-    path = filedialog.askopenfilename(initialdir = "./params",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
+    path = filedialog.askopenfilename(
+        initialdir="./params", title="Select file", filetypes=(("text files", "*.txt"), ("all files", "*.*")))
     with open(path, 'r') as dic_txt:
         dic = eval(dic_txt.read())
-        
+
     for boundary in ['hsv_lower', 'hsv_upper']:
         for i in range(3):
             sliders[boundary][i].set(int(dic[boundary][i]))
-    
+
     sliders['kernel_size'].set((int(dic['kernel_size']) - 1) / 2)
 
-Button(window, text="OPEN", command=open_callback).grid(column=1, row=current_row)
-        
+
+Button(window, text="OPEN", command=open_callback).grid(
+    column=1, row=current_row)
+
 # Save function
+
+
 def save_callback():
-    f = filedialog.asksaveasfile(initialdir = "./params", defaultextension=".txt")
+    f = filedialog.asksaveasfile(
+        initialdir="./params", defaultextension=".txt")
     if f is None:
         return
     f.write(str(gui.params))
     f.close()
-        
-Button(window, text="SAVE", command=save_callback).grid(column=2, row=current_row)
+
+
+Button(window, text="SAVE", command=save_callback).grid(
+    column=2, row=current_row)
 current_row += 1
 
 # Define progressbar
-progressbar=ttk.Progressbar(window, orient="horizontal", mode="determinate")
+progressbar = ttk.Progressbar(window, orient="horizontal", mode="determinate")
 progressbar.grid(column=2, row=current_row)
 
 
@@ -227,8 +255,11 @@ def run_all_callback():
                        params=params,
                        type=type)
 
-Label(window, text="Preprocess all", font=("Arial Bold", 20)).grid(column=init_col, row=current_row)
-Button(window, text="Run!", command=run_all_callback).grid(column=1, row=current_row)
+
+Label(window, text="Preprocess all", font=("Arial Bold", 20)).grid(
+    column=init_col, row=current_row)
+Button(window, text="Run!", command=run_all_callback).grid(
+    column=1, row=current_row)
 current_row += 1
 
 window.mainloop()
