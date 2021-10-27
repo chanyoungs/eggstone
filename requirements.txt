@@ -14,7 +14,7 @@ colorama==0.4.3
 cryptography==2.9.2
 cycler==0.10.0
 cytoolz==0.10.1
-dask==1.1.4
+dask==2021.10.0
 decorator==4.4.2
 gast==0.2.2
 google-auth @ file:///tmp/build/80754af9/google-auth_1594357566944/work
